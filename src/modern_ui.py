@@ -96,7 +96,6 @@ class ModernGameUI:
         self._create_enhanced_controls()
         
         self._create_bottom_control_panel()
-        self._create_animated_footer()
         self._start_all_animations()
         self._update_player_display()
     
@@ -903,31 +902,12 @@ class ModernGameUI:
             
         print("✓ Préparation du retour au menu...")
         
-        # Méthode de retour au menu optimisée
+        # Méthode de retour au menu optimisée (compatible avec architecture à fenêtre unique)
         def execute_return():
-            # 1. Cacher la fenêtre immédiatement pour feedback visuel
-            try:
-                if master and master.winfo_exists():
-                    master.withdraw()
-            except:
-                pass
-                
-            # 2. Appeler le callback pour créer le menu
             print("✓ Appel du callback de menu...")
+            # Juste appeler le callback, ne pas détruire la fenêtre
+            # car elle sera réutilisée par le menu
             callback()
-            
-            # 3. Détruire la fenêtre de jeu après un court délai
-            def final_cleanup():
-                try:
-                    if master and master.winfo_exists():
-                        master.destroy()
-                        print("✓ Fenêtre de jeu détruite avec succès")
-                except Exception as e:
-                    print(f"Note: Fenêtre déjà fermée: {e}")
-            
-            # Utiliser un timer indépendant pour la destruction finale
-            import threading
-            threading.Timer(0.5, final_cleanup).start()
         
         # Utiliser after_idle pour s'assurer que les événements Tk en cours sont traités
         if master:
