@@ -1,11 +1,11 @@
-# 🎮 Jeu de Tic Tac Toe Deluxe Ultra-Moderne
+# 🎮 Tic Tac Toe Deluxe
 
 Un jeu de Tic Tac Toe (Morpion) sophistiqué avec interface graphique ultra-moderne développé en Python avec tkinter.
 
 ## ✨ Nouvelles fonctionnalités révolutionnaires
 
 - 🎮 **Menu interactif avec drag & drop** : Glissez-déposez les modes de jeu pour une expérience unique
-- 🤖 **Intelligence artificielle avancée** : Affrontez une IA avec 3 niveaux de difficulté (Facile, Moyen, Difficile)
+- 🤖 **Intelligence artificielle** : Affrontez une IA intelligente qui analyse vos mouvements
 - 🖥️ **Mode plein écran automatique** : Expérience immersive dès le lancement
 - 🎨 **Effets visuels spectaculaires** : Animations de particules, transitions fluides, effets hover
 - 🎯 **Interface ultra-réactive** : Boutons qui réagissent au survol avec des animations
@@ -39,7 +39,7 @@ tic_tac_toe/
    - Le jeu se lance automatiquement avec le mode choisi !
 3. **Mode Joueur vs IA** :
    - Vous jouez les X, l'IA joue les O
-   - L'IA adapte son temps de réflexion selon le niveau choisi
+   - L'IA analyse chaque situation et adapte sa stratégie
    - Animations spéciales quand l'IA réfléchit
 4. **Mode Joueur vs Joueur** :
    - Deux joueurs s'affrontent alternativement (X et O)
@@ -54,7 +54,7 @@ tic_tac_toe/
 ## 🛠️ Fonctionnalités
 
 - ✅ **Menu interactif avec drag & drop** : Sélection des modes par glisser-déposer
-- ✅ **Intelligence artificielle multicouche** : 3 niveaux de difficulté avec algorithmes adaptatifs
+- ✅ **Intelligence artificielle** : IA stratégique qui s'adapte au jeu
 - ✅ **Plein écran automatique** : Expérience immersive dès le lancement
 - ✅ **Effets visuels spectaculaires** : Particules animées, transitions fluides, feedback visuel
 - ✅ **Interface ultra-moderne** : Design sophistiqué avec palette de couleurs avancée
@@ -78,13 +78,14 @@ Vous pouvez personnaliser l'apparence du jeu en modifiant le fichier `config/set
 
 ## 🤖 Intelligence Artificielle
 
-L'IA propose 3 niveaux de difficulté :
+L'IA utilise un algorithme minimax sophistiqué pour analyser chaque situation de jeu et prendre les meilleures décisions stratégiques :
 
-- **🟢 FACILE** : Mouvements principalement aléatoires (0.5s de réflexion)
-- **🟡 MOYEN** : Stratégie équilibrée avec blocage basique (1.0s de réflexion)  
-- **🔴 DIFFICILE** : Algorithme minimax imbattable (2.0s de réflexion)
+- **🧠 Analyse intelligente** : L'IA évalue toutes les possibilités pour optimiser ses mouvements
+- **�️ Stratégie défensive** : Elle bloque automatiquement vos tentatives de victoire
+- **⚔️ Stratégie offensive** : Elle cherche activement à créer des opportunités de gagner
+- **⏱️ Temps de réflexion** : Animation visuelle pendant que l'IA calcule son prochain coup
 
-L'IA affiche des indicateurs visuels de réflexion et adapte son comportement selon le niveau choisi.
+L'IA offre un défi stimulant tout en gardant le jeu amusant et équilibré.
 
 ## 📋 Prérequis
 
