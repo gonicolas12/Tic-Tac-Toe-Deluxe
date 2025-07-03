@@ -554,9 +554,11 @@ class ModernGameUI:
         self.ai_thinking = True
         self._start_thinking_animation()
         
-        # Obtenir le temps de réflexion selon le niveau
-        thinking_times = {'easy': 0.5, 'medium': 1.0, 'hard': 2.0}
-        thinking_time = thinking_times.get(self.ai_level, 1.0)
+        # Obtenir le temps de réflexion de l'IA
+        if hasattr(self, 'ai_player'):
+            thinking_time = self.ai_player.get_thinking_time()
+        else:
+            thinking_time = 2.0  # Fallback
         
         def make_ai_move():
             self._stop_thinking_animation()
@@ -820,6 +822,11 @@ class ModernGameUI:
     def _on_restart_click(self):
         """Redémarre le jeu avec animation"""
         self.game_logic.restart_game()
+        
+        # Réinitialiser l'IA si elle existe
+        if self.ai_player:
+            self.ai_player.reset_game()
+        
         self._reset_ui_with_animation()
         
         # Si l'IA commence

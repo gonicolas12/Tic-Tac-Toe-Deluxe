@@ -409,10 +409,9 @@ class EnhancedGameMenu:
         def launch_delayed():
             try:
                 if self.on_game_start:
-                    ai_level = 'medium'  # Valeur par défaut
                     print("✓ Mode sélectionné:", mode)
                     print("✓ Lancement du jeu...")
-                    self.on_game_start(mode, ai_level)
+                    self.on_game_start(mode, 'hard')  # Un seul niveau d'IA
             except Exception as e:
                 print(f"Erreur lors du lancement du jeu: {e}")
             

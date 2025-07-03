@@ -1,5 +1,6 @@
 """
 Intelligence artificielle pour le jeu Tic Tac Toe
+IA difficile mais battable avec stratégie adaptative
 """
 
 import random
@@ -7,16 +8,17 @@ import time
 from .utils import check_winner, is_board_full
 
 class TicTacToeAI:
-    """IA pour le jeu Tic Tac Toe avec différents niveaux de difficulté"""
+    """IA difficile mais battable pour le jeu Tic Tac Toe"""
     
-    def __init__(self, difficulty='medium', player_symbol='O'):
-        self.difficulty = difficulty  # 'easy', 'medium', 'hard'
+    def __init__(self, difficulty='hard', player_symbol='O'):
+        # Le paramètre difficulty est conservé pour compatibilité mais ignoré
         self.player_symbol = player_symbol
         self.human_symbol = 'X' if player_symbol == 'O' else 'O'
+        self.move_count = 0  # Compteur de coups pour adapter la stratégie
         
     def get_move(self, board):
         """
-        Retourne le meilleur coup pour l'IA
+        Retourne le meilleur coup pour l'IA difficile mais battable
         
         Args:
             board: État actuel de la grille (3x3)
@@ -24,15 +26,197 @@ class TicTacToeAI:
         Returns:
             tuple: (row, col) du meilleur coup
         """
-        if self.difficulty == 'easy':
-            return self._get_random_move(board)
-        elif self.difficulty == 'medium':
-            return self._get_medium_move(board)
-        else:  # hard
-            return self._get_hard_move(board)
+        self.move_count += 1
+        return self._get_challenging_move(board)
     
-    def _get_random_move(self, board):
-        """Coup aléatoire (IA facile)"""
+    def _get_challenging_move(self, board):
+        """
+        IA difficile mais battable : utilise une stratégie adaptative
+        - Premier coup : évite le centre (plus humain)
+        - Privilégie la stratégie défensive/offensive
+        - Introduit parfois des coups suboptimaux calculés
+        """
+        # Premier coup de l'IA : stratégie variable et plus humaine
+        if self.move_count == 1:
+            return self._get_opening_move(board)
+        
+        # Toujours vérifier si l'IA peut gagner immédiatement
+        win_move = self._find_winning_move(board, self.player_symbol)
+        if win_move:
+            return win_move
+        
+        # Toujours bloquer si le joueur peut gagner
+        block_move = self._find_winning_move(board, self.human_symbol)
+        if block_move:
+            return block_move
+        
+        # Vérifier les fourchettes (double menace) - priorité élevée
+        fork_move = self._find_fork_move(board, self.player_symbol)
+        if fork_move:
+            # 85% de chance de jouer la fourchette (laisse 15% d'opportunité)
+            if random.random() < 0.85:
+                return fork_move
+        
+        # Bloquer les fourchettes adverses
+        opponent_fork = self._find_fork_move(board, self.human_symbol)
+        if opponent_fork:
+            # Chercher un coup qui bloque la fourchette ou crée une contre-menace
+            counter_move = self._find_counter_fork(board, opponent_fork)
+            if counter_move:
+                return counter_move
+            return opponent_fork  # Bloquer directement si pas de contre-jeu
+        
+        # Stratégie adaptative selon la phase de jeu
+        if self.move_count <= 3:
+            # Début de partie : stratégie positionnelle avec un peu d'aléatoire
+            return self._get_positional_move(board)
+        else:
+            # Fin de partie : jeu plus précis mais pas parfait
+            return self._get_endgame_move(board)
+    
+    def _get_opening_move(self, board):
+        """Premier coup de l'IA - stratégie variée et moins prévisible"""
+        # Si le joueur a pris le centre, prendre un coin (stratégie classique)
+        if board[1][1] == self.human_symbol:
+            corners = [(0, 0), (0, 2), (2, 0), (2, 2)]
+            available_corners = [(r, c) for r, c in corners if board[r][c] == ""]
+            if available_corners:
+                return random.choice(available_corners)
+        
+        # Si le joueur a pris un coin, ne pas toujours prendre le centre
+        corners_taken = sum(1 for r, c in [(0, 0), (0, 2), (2, 0), (2, 2)] if board[r][c] == self.human_symbol)
+        
+        if corners_taken > 0:
+            # 60% de chance de prendre le centre, 40% de prendre un autre coin ou côté
+            if random.random() < 0.6 and board[1][1] == "":
+                return (1, 1)
+            else:
+                # Prendre un coin libre ou un côté
+                good_moves = []
+                corners = [(0, 0), (0, 2), (2, 0), (2, 2)]
+                sides = [(0, 1), (1, 0), (1, 2), (2, 1)]
+                
+                for r, c in corners + sides:
+                    if board[r][c] == "":
+                        good_moves.append((r, c))
+                
+                if good_moves:
+                    return random.choice(good_moves)
+        
+        # Première ouverture : variation entre centre et coins
+        if board[1][1] == "":
+            # 70% centre, 30% coin (plus imprévisible que toujours centre)
+            if random.random() < 0.7:
+                return (1, 1)
+        
+        # Prendre un coin si disponible
+        corners = [(0, 0), (0, 2), (2, 0), (2, 2)]
+        available_corners = [(r, c) for r, c in corners if board[r][c] == ""]
+        if available_corners:
+            return random.choice(available_corners)
+        
+        # Fallback sur un mouvement aléatoire
+        return self._get_random_move(board)
+    
+    def _find_fork_move(self, board, symbol):
+        """Trouve un coup qui crée une fourchette (double menace de victoire)"""
+        for i in range(3):
+            for j in range(3):
+                if board[i][j] == "":
+                    # Tester ce coup
+                    board[i][j] = symbol
+                    winning_moves = []
+                    
+                    # Compter combien de coups gagnants ce coup créerait
+                    for x in range(3):
+                        for y in range(3):
+                            if board[x][y] == "":
+                                board[x][y] = symbol
+                                if check_winner(board):
+                                    winning_moves.append((x, y))
+                                board[x][y] = ""
+                    
+                    board[i][j] = ""  # Annuler le coup test
+                    
+                    # C'est une fourchette si on a au moins 2 coups gagnants
+                    if len(winning_moves) >= 2:
+                        return (i, j)
+        
+        return None
+    
+    def _find_counter_fork(self, board, fork_position):
+        """Trouve un coup qui bloque une fourchette ou crée une contre-menace"""
+        # D'abord essayer de créer une menace qui force l'adversaire à défendre
+        for i in range(3):
+            for j in range(3):
+                if board[i][j] == "" and (i, j) != fork_position:
+                    board[i][j] = self.player_symbol
+                    
+                    # Vérifier si ce coup crée une menace immédiate
+                    threats = 0
+                    for x in range(3):
+                        for y in range(3):
+                            if board[x][y] == "":
+                                board[x][y] = self.player_symbol
+                                if check_winner(board):
+                                    threats += 1
+                                board[x][y] = ""
+                    
+                    board[i][j] = ""  # Annuler le coup test
+                    
+                    # Si ce coup crée une menace, c'est un bon contre-jeu
+                    if threats > 0:
+                        return (i, j)
+        
+        return None
+    
+    def _get_positional_move(self, board):
+        """Stratégie positionnelle avec un peu d'aléatoire"""
+        # Prendre le centre si disponible (70% de chance)
+        if board[1][1] == "" and random.random() < 0.7:
+            return (1, 1)
+        
+        # Prendre un coin si disponible
+        corners = [(0, 0), (0, 2), (2, 0), (2, 2)]
+        available_corners = [(r, c) for r, c in corners if board[r][c] == ""]
+        if available_corners:
+            # 80% de chance de prendre un coin, 20% de faire autre chose
+            if random.random() < 0.8:
+                return random.choice(available_corners)
+        
+        # Stratégie alternative : côtés ou mouvement aléatoire
+        return self._get_fallback_move(board)
+    
+    def _get_endgame_move(self, board):
+        """Stratégie de fin de partie - plus précise mais pas parfaite"""
+        # Utiliser minimax avec une probabilité réduite (90%)
+        if random.random() < 0.9:
+            _, move = self._minimax(board, True, -float('inf'), float('inf'))
+            if move:
+                return move
+        
+        # 10% du temps, utiliser une stratégie simple (moins optimale)
+        return self._get_fallback_move(board)
+    
+    def _get_fallback_move(self, board):
+        """Stratégie de fallback simple pour remplacer les anciens niveaux"""
+        # Prendre le centre si disponible
+        if board[1][1] == "":
+            return (1, 1)
+        
+        # Prendre un coin si disponible
+        corners = [(0, 0), (0, 2), (2, 0), (2, 2)]
+        available_corners = [(r, c) for r, c in corners if board[r][c] == ""]
+        if available_corners:
+            return random.choice(available_corners)
+        
+        # Prendre un côté
+        sides = [(0, 1), (1, 0), (1, 2), (2, 1)]
+        available_sides = [(r, c) for r, c in sides if board[r][c] == ""]
+        if available_sides:
+            return random.choice(available_sides)
+        
+        # Mouvement aléatoire en dernier recours
         empty_cells = []
         for i in range(3):
             for j in range(3):
@@ -40,36 +224,6 @@ class TicTacToeAI:
                     empty_cells.append((i, j))
         
         return random.choice(empty_cells) if empty_cells else None
-    
-    def _get_medium_move(self, board):
-        """IA moyenne : bloque le joueur et cherche à gagner"""
-        # 1. Vérifier si l'IA peut gagner
-        win_move = self._find_winning_move(board, self.player_symbol)
-        if win_move:
-            return win_move
-        
-        # 2. Vérifier si il faut bloquer le joueur
-        block_move = self._find_winning_move(board, self.human_symbol)
-        if block_move:
-            return block_move
-        
-        # 3. Prendre le centre si disponible
-        if board[1][1] == "":
-            return (1, 1)
-        
-        # 4. Prendre un coin si disponible
-        corners = [(0, 0), (0, 2), (2, 0), (2, 2)]
-        available_corners = [(r, c) for r, c in corners if board[r][c] == ""]
-        if available_corners:
-            return random.choice(available_corners)
-        
-        # 5. Mouvement aléatoire sinon
-        return self._get_random_move(board)
-    
-    def _get_hard_move(self, board):
-        """IA difficile : utilise l'algorithme minimax"""
-        _, move = self._minimax(board, True, -float('inf'), float('inf'))
-        return move
     
     def _find_winning_move(self, board, symbol):
         """Trouve un coup gagnant pour le symbole donné"""
@@ -171,11 +325,16 @@ class TicTacToeAI:
         
         return None
     
+    def reset_game(self):
+        """Réinitialise l'état de l'IA pour une nouvelle partie"""
+        self.move_count = 0
+    
     def get_thinking_time(self):
         """Retourne un temps de réflexion pour rendre l'IA plus humaine"""
-        if self.difficulty == 'easy':
-            return random.uniform(0.5, 1.5)
-        elif self.difficulty == 'medium':
-            return random.uniform(1.0, 2.5)
-        else:  # hard
-            return random.uniform(1.5, 3.0)
+        # Temps de réflexion variable selon la phase de jeu
+        if self.move_count == 1:
+            return random.uniform(0.8, 1.5)  # Premier coup plus rapide
+        elif self.move_count <= 3:
+            return random.uniform(1.2, 2.3)  # Début de partie
+        else:
+            return random.uniform(1.8, 3.2)  # Fin de partie plus réfléchie
